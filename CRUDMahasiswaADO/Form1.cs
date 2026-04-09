@@ -266,5 +266,22 @@ namespace CRUDMahasiswaADO
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView1.CellClick += dataGridView1_CellClick;
         }
+
+        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Pastikan index baris yang diklik valid (bukan header tabel)
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = dataGridView1.Rows[e.RowIndex];
+
+                // Memindahkan data dari baris tabel kembali ke kotak inputan
+                txtNIM.Text = row.Cells["NIM"].Value.ToString();
+                txtNama.Text = row.Cells["Nama"].Value.ToString();
+                cmbJK.Text = row.Cells["Jenis Kelamin"].Value.ToString();
+                dtpTanggalLahir.Value = Convert.ToDateTime(row.Cells["Tanggal Lahir"].Value);
+                txtAlamat.Text = row.Cells["Alamat"].Value.ToString();
+                txtKodeProdi.Text = row.Cells["Kode Prodi"].Value.ToString();
+            }
+        }
     }
 }
