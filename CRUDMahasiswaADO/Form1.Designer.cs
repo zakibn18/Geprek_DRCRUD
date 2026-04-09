@@ -162,6 +162,7 @@
             this.btnConnect.TabIndex = 13;
             this.btnConnect.Text = "Membuka Koneksi";
             this.btnConnect.UseVisualStyleBackColor = true;
+            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
             // btnLoad
             // 
