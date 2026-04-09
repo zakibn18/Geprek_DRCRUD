@@ -11,11 +11,15 @@ using System.Data.SqlClient;
 
 namespace CRUDMahasiswaADO
 {
-    public partial class Form1 : Form
+    public partial class FormMahasiswa : Form
     {
-        public Form1()
+        private readonly SqlConnection conn;
+        private readonly string connectionString = "Data Source=DESKTOP-8TS9IRD\\ZAKIBN; Initial Catalog=DBAkademikADO; Integrated Security=True";
+
+        public FormMahasiswa()
         {
             InitializeComponent();
+            conn = new SqlConnection(connectionString);
         }
     }
 }
