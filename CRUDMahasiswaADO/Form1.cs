@@ -24,6 +24,20 @@ namespace CRUDMahasiswaADO
             conn = new SqlConnection(connectionString);
         }
 
+        private void SimpanLog(string pesan)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string query = @"INSERT INTO LogError VALUES (GETDATE(), @pesan)";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@pesan", pesan);
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         private void ConnectDatabase()
         {
             try
@@ -67,7 +81,6 @@ namespace CRUDMahasiswaADO
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    // ✅ DIUBAH: pakai SP
                     using (SqlCommand cmd = new SqlCommand("sp_InsertMahasiswa", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -86,9 +99,15 @@ namespace CRUDMahasiswaADO
                 MessageBox.Show("Data berhasil ditambahkan");
                 LoadData();
             }
+            catch (SqlException ex)
+            {
+                SimpanLog(ex.Message);
+                MessageBox.Show("SQL Error: " + ex.Message);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                SimpanLog(ex.Message);
+                MessageBox.Show("General Error: " + ex.Message);
             }
         }
 
@@ -98,7 +117,6 @@ namespace CRUDMahasiswaADO
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    // ✅ DIUBAH: pakai SP
                     using (SqlCommand cmd = new SqlCommand("sp_UpdateMahasiswa", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -126,9 +144,15 @@ namespace CRUDMahasiswaADO
                     }
                 }
             }
+            catch (SqlException ex)
+            {
+                SimpanLog(ex.Message);
+                MessageBox.Show("SQL Error: " + ex.Message);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Terjadi kesalahan:" + ex.Message);
+                SimpanLog(ex.Message);
+                MessageBox.Show("General Error: " + ex.Message);
             }
         }
 
@@ -142,7 +166,6 @@ namespace CRUDMahasiswaADO
                 {
                     using (SqlConnection conn = new SqlConnection(connectionString))
                     {
-                        // ✅ DIUBAH: pakai SP
                         using (SqlCommand cmd = new SqlCommand("sp_DeleteMahasiswa", conn))
                         {
                             cmd.CommandType = CommandType.StoredProcedure;
@@ -165,13 +188,18 @@ namespace CRUDMahasiswaADO
                     }
                 }
             }
+            catch (SqlException ex)
+            {
+                SimpanLog(ex.Message);
+                MessageBox.Show("SQL Error: " + ex.Message);
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Terjadi kesalahan: " + ex.Message);
+                SimpanLog(ex.Message);
+                MessageBox.Show("General Error: " + ex.Message);
             }
         }
 
-        // ✅ BARU: Method HitungTotal pakai OUTPUT parameter
         private void HitungTotal()
         {
             try
@@ -257,7 +285,6 @@ namespace CRUDMahasiswaADO
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    // ✅ DIUBAH: pakai SP
                     using (SqlCommand cmd = new SqlCommand("sp_GetMahasiswa", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
@@ -274,8 +301,7 @@ namespace CRUDMahasiswaADO
                         }
                     }
                 }
-
-                HitungTotal(); // ✅ BARU: panggil setelah load
+                HitungTotal();
             }
             catch (Exception ex)
             {
@@ -339,14 +365,20 @@ namespace CRUDMahasiswaADO
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    conn.Open();
-                    string query = "UPDATE Mahasiswa SET Nama='HACKED' WHERE NIM='" + txtNIM.Text + "';";
+                    string query = 
+                    "UPDATE Mahasiswa SET Nama='" + 
+                    txtNama.Text + 
+                    "' WHERE NIM='" + 
+                    txtNIM.Text + "'";
 
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        int result = cmd.ExecuteNonQuery();
-                        MessageBox.Show(result + " baris terupdate");
-                    }
+                    SqlCommand cmd = 
+                    new SqlCommand(query, conn);
+
+                    conn.Open();
+
+                    cmd.ExecuteNonQuery();
+                    
+                    MessageBox.Show("Update berhasil");
                 }
                 LoadData();
             }
