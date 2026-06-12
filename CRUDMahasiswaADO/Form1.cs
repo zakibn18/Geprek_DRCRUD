@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -77,37 +77,61 @@ namespace CRUDMahasiswaADO
 
         private void btnInsert_Click(object sender, EventArgs e)
         {
+            SqlConnection conn = new SqlConnection(connectionString);
+            conn.Open();
+
+            // Memulai transaksi
+            SqlTransaction trans = conn.BeginTransaction();
+
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    using (SqlCommand cmd = new SqlCommand("sp_InsertMahasiswa", conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@NIM", txtNIM.Text);
-                        cmd.Parameters.AddWithValue("@Nama", txtNama.Text);
-                        cmd.Parameters.AddWithValue("@JenisKelamin", cmbJK.Text);
-                        cmd.Parameters.AddWithValue("@TanggalLahir", dtpTanggalLahir.Value.Date);
-                        cmd.Parameters.AddWithValue("@Alamat", txtAlamat.Text);
-                        cmd.Parameters.AddWithValue("@KodeProdi", txtKodeProdi.Text);
-                        cmd.Parameters.AddWithValue("@TanggalDaftar", DateTime.Now);
+                // Command 1: Insert Mahasiswa
+                SqlCommand cmd = new SqlCommand("sp_InsertMahasiswa", conn, trans);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@NIM", txtNIM.Text);
+                cmd.Parameters.AddWithValue("@Nama", txtNama.Text);
+                cmd.Parameters.AddWithValue("@JenisKelamin", cmbJK.Text);
+                cmd.Parameters.AddWithValue("@TanggalLahir", dtpTanggalLahir.Value.Date);
+                cmd.Parameters.AddWithValue("@Alamat", txtAlamat.Text);
+                cmd.Parameters.AddWithValue("@KodeProdi", txtKodeProdi.Text);
+                cmd.Parameters.AddWithValue("@TanggalDaftar", DateTime.Now);
 
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
-                    }
-                }
+                cmd.ExecuteNonQuery();
+
+                // Command 2: Skenario Error (Sengaja insert ke tabel LogAktivitasSalah)
+                SqlCommand cmdLog = new SqlCommand(
+                    @"INSERT INTO LogAktivitas (aktivitas, waktu) VALUES (@aktivitas, GETDATE())",
+                    conn, trans);
+                cmdLog.Parameters.AddWithValue("@aktivitas", "INSERT MAHASISWA : " + txtNIM.Text);
+
+                cmdLog.ExecuteNonQuery();
+
+                // Jika kedua eksekusi di atas sukses, simpan permanen
+                trans.Commit();
                 MessageBox.Show("Data berhasil ditambahkan");
                 LoadData();
             }
             catch (SqlException ex)
             {
-                SimpanLog(ex.Message);
-                MessageBox.Show("SQL Error: " + ex.Message);
+                // Jika terjadi error dari SQL, batalkan semua perubahan
+                trans.Rollback();
+                SimpanLog("ROLLBACK INSERT : " + ex.Message);
+                MessageBox.Show("SQL Error: " + ex.Message, "Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                SimpanLog(ex.Message);
-                MessageBox.Show("General Error: " + ex.Message);
+                // Jika terjadi error umum aplikasi, batalkan semua perubahan
+                trans.Rollback();
+                SimpanLog("GENERAL ERROR : " + ex.Message);
+                MessageBox.Show("System Error: " + ex.Message, "Gagal", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // Memastikan koneksi selalu ditutup, baik saat sukses maupun error
+                if (conn.State == ConnectionState.Open)
+                {
+                    conn.Close();
+                }
             }
         }
 
@@ -131,7 +155,7 @@ namespace CRUDMahasiswaADO
                         conn.Open();
                         int result = cmd.ExecuteNonQuery();
 
-                        if (result < 0)
+                        if (result > 0)
                         {
                             MessageBox.Show("Data berhasil diupdate");
                             ClearForm();
@@ -174,7 +198,7 @@ namespace CRUDMahasiswaADO
                             conn.Open();
                             int result = cmd.ExecuteNonQuery();
 
-                            if (result < 0)
+                            if (result > 0)
                             {
                                 MessageBox.Show("Data berhasil dihapus");
                                 ClearForm();
@@ -386,6 +410,13 @@ namespace CRUDMahasiswaADO
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void Cetak_Click(object sender, EventArgs e)
+        {
+            FilterData fm3 = new FilterData();
+            fm3.Show();
+            this.Hide();
         }
     }
 }
