@@ -14,9 +14,11 @@ namespace CRUDMahasiswaADO
     public partial class report : Form
     {
         static string connectionString = "Data Source=DESKTOP-8TS9IRD\\ZAKIBN; Initial Catalog=DBAkademikADO; Integrated Security=True";
+
         SqlConnection conn = new SqlConnection(connectionString);
         SqlDataAdapter da;
         DataTable dtMahasiswa;
+
         DataMahasiswa listMahasiswa = new DataMahasiswa();
 
         public string prodi { get; set; }
